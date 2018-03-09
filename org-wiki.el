@@ -7,7 +7,7 @@
 ;; Keywords: org-mode, wiki, notes, notebook
 ;; Version: 5.1
 ;; URL: https://www.github.com/caiorss/org-wiki'
-;; Package-Requires: ((helm-core "2.0") (cl-lib "0.5"))
+;; Package-Requires: ((helm-core "2.0") (cl-lib "0.5") (s "1.10.0"))
 
 
 ;; This is free and unencumbered software released into the public domain.
@@ -46,6 +46,7 @@
 ;; external libraries
 (require 'ox-html)
 (require 'helm)
+(require 's)
 
 ;; built-in Emacs lib
 (require 'cl-lib)     ;; Common-lisp emulation library
@@ -217,10 +218,11 @@ ELISP> (file->org-wiki--page  \"Spanish.org\")
 Example:
 ELISP> (org-wiki/replace-extension \"file.org\" \"html\" )
        \"file.html\""
-  (concat (car (split-string filename "\\."))
-          "."
-          extension
-          ))
+  (concat (reverse (cadr
+		    (s-split-up-to "\\."(reverse filename) 1)))
+	  "."
+	  extension
+	  ))
 
 
 (defun org-wiki--page->file (pagename)
@@ -863,7 +865,8 @@ to cancel the download."
 (defun org-wiki-html-page ()
   "Open the current wiki page in the browser.  It is created if it doesn't exist yet."
   (interactive)
-  (let ((html-file   (org-wiki--replace-extension (buffer-file-name) "html")))
+  (let ((html-file
+	 (concat "file:" (org-wiki--replace-extension (buffer-file-name) "html"))))
     (if (not (file-exists-p html-file))
         (org-html-export-to-html))
   (browse-url html-file)))
@@ -872,7 +875,7 @@ to cancel the download."
   "Exports the current wiki page to html and opens it in the browser."
   (interactive)
   (org-html-export-to-html)
-  (browse-url (org-wiki--replace-extension (buffer-file-name) "html")))
+  (browse-url (concat "file:" (org-wiki--replace-extension (buffer-file-name) "html"))))
 
 (defun org-wiki-search ()
   "Search all wiki pages that contains a pattern (regexp or name)."
